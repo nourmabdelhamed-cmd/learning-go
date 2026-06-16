@@ -1,0 +1,15 @@
+{
+  "run_id": "local-dev",
+  "rows": 2000,
+  "vehicles": 4,
+  "seed": 42,
+  "data_dir": "data",
+  "models_dir": "models",
+  "runs_dir": "runs",
+  "steps": ["generate", "validate", "features", "train", "monitor"],
+  "retries": 1,
+  "timeout_seconds": 300,
+  "mlflow_tracking_uri": "sqlite:///mlflow.db",
+  "mlflow_experiment": "vehicle-telemetry-unsafe-maneuver",
+  "mlflow_run_name": "custom-go-orchestrator"
+}

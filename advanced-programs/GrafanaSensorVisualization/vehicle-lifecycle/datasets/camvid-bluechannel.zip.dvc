@@ -1,0 +1,18 @@
+md5: 33d3ffa7b9cdbbf77b55ed45e1bf3ec4
+frozen: true
+meta:
+  dataset: CamVid
+  task: road-scene semantic segmentation
+  source: Waikato UFDL CamVid mirror
+  archive: camvid-bluechannel.zip
+deps:
+- checksum: '"a289bc1-5e0e3ca6ea480"'
+  size: 170433473
+  hash: md5
+  path: 
+    https://datasets.cms.waikato.ac.nz/ufdl/data/camvid/camvid-bluechannel.zip
+outs:
+- md5: 6262187a808475c179c493c4b5f84261
+  size: 170433473
+  hash: md5
+  path: camvid-bluechannel.zip

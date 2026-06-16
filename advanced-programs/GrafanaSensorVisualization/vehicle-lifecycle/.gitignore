@@ -1,0 +1,15 @@
+data/
+models/
+runs/
+mlruns/
+mlartifacts/
+mlflow.db*
+.gocache/
+.uv-cache/
+.pytest_cache/
+.ruff_cache/
+.venv/
+__pycache__/
+*.egg-info/
+*.pyc
+*.test
