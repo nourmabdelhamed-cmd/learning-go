@@ -30,3 +30,6 @@ advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/.uv-cache/
 advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/.venv/
 advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/.pytest_cache/
 advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/ml/*.egg-info/
+
+# Local Go build cache for WebSocket examples
+advanced-programs/WebsocketsChat/.gocache/
