@@ -1,0 +1,78 @@
+{
+  "seed_everything": 42,
+  "trainer": {
+    "accelerator": "cpu",
+    "devices": 1,
+    "max_epochs": 1,
+    "log_every_n_steps": 1,
+    "default_root_dir": "models/perception/lightning",
+    "deterministic": true,
+    "enable_checkpointing": true,
+    "logger": [
+      {
+        "class_path": "lightning.pytorch.loggers.MLFlowLogger",
+        "init_args": {
+          "experiment_name": "vehicle-perception-segmentation",
+          "run_name": "lightning-tiny-unet-camvid",
+          "tracking_uri": "sqlite:///mlflow.db"
+        }
+      },
+      {
+        "class_path": "lightning.pytorch.loggers.WandbLogger",
+        "init_args": {
+          "project": "vehicle-perception-segmentation",
+          "name": "lightning-tiny-unet-camvid",
+          "offline": true,
+          "save_dir": "models/perception/wandb",
+          "log_model": false
+        }
+      }
+    ],
+    "callbacks": [
+      {
+        "class_path": "lightning.pytorch.callbacks.ModelCheckpoint",
+        "init_args": {
+          "dirpath": "models/perception/checkpoints",
+          "filename": "camvid-tiny-unet-{epoch:02d}-{val_miou:.3f}",
+          "monitor": "val_miou",
+          "mode": "max",
+          "save_top_k": 1,
+          "save_last": true
+        }
+      },
+      {
+        "class_path": "vehicle_ml.segmentation_callbacks.MLflowConfigArtifactCallback",
+        "init_args": {
+          "config_path": "configs/segmentation-lightning.json",
+          "artifact_path": "config"
+        }
+      },
+      {
+        "class_path": "vehicle_ml.segmentation_callbacks.WandbSegmentationVisualizationCallback",
+        "init_args": {
+          "max_images": 4,
+          "every_n_epochs": 1
+        }
+      }
+    ]
+  },
+  "model": {
+    "architecture": "tiny_unet",
+    "num_classes": 33,
+    "base_channels": 16,
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "ignore_index": -100
+  },
+  "data": {
+    "manifest_path": "data/perception/camvid_manifest.jsonl",
+    "image_size": [128, 128],
+    "batch_size": 4,
+    "num_workers": 0,
+    "num_classes": 33,
+    "max_train_samples": 64,
+    "max_val_samples": 16,
+    "max_test_samples": 16,
+    "pin_memory": false
+  }
+}

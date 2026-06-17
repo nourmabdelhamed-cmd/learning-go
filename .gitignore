@@ -17,3 +17,22 @@ glide.lock
 tmp/
 
 .idea
+
+# Generated data/model artifacts for the vehicle telemetry lifecycle demo
+advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/data/
+advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/models/
+advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/runs/
+advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/mlruns/
+advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/mlartifacts/
+advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/mlflow.db*
+advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/.gocache/
+advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/.uv-cache/
+advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/.venv/
+advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/.pytest_cache/
+advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/ml/*.egg-info/
+
+# Local Go build cache for WebSocket examples
+advanced-programs/WebsocketsChat/.gocache/
+
+*.tgz
+*.zip

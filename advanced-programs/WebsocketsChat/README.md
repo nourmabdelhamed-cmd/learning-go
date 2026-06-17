@@ -2,6 +2,16 @@
 
 A simple Websockets realtime chat application.
 
+## Learning path
+
+The original app in `main.go` uses Gin and Melody. For learning the raw WebSocket mechanics before adding LLMs, start with:
+
+```bash
+go run ./phase1
+```
+
+That phase-one example uses `net/http` and `gorilla/websocket` directly so the connection lifecycle, read loop, write loop, JSON protocol, and broadcast hub are visible.
+
 ## Requirements
 
 - Local golang installation

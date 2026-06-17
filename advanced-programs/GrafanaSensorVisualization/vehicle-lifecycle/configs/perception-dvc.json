@@ -1,0 +1,19 @@
+{
+  "run_id": "camvid-public-dvc",
+  "rows": 1,
+  "vehicles": 1,
+  "seed": 42,
+  "data_dir": "data",
+  "models_dir": "models",
+  "runs_dir": "runs",
+  "steps": ["dvc_pull", "perception_manifest"],
+  "retries": 1,
+  "timeout_seconds": 300,
+  "mlflow_tracking_uri": "sqlite:///mlflow.db",
+  "mlflow_experiment": "vehicle-perception-segmentation",
+  "mlflow_run_name": "camvid-public-dvc",
+  "dvc_targets": ["datasets/camvid-bluechannel.zip.dvc"],
+  "perception_zip": "datasets/camvid-bluechannel.zip",
+  "perception_manifest": "data/perception/camvid_manifest.jsonl",
+  "perception_summary": "data/perception/camvid_summary.json"
+}
