@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/tannergabriel/learning-go/advanced-programs/nuscenes-data-platform/internal/config"
 	"github.com/tannergabriel/learning-go/advanced-programs/nuscenes-data-platform/internal/events"
@@ -144,10 +145,8 @@ func Ingest(ctx context.Context, cfg config.Config) (IngestSummary, error) {
 			}, rawAssetRows)
 		},
 	}
-	for _, publishFn := range publishers {
-		if err := publishFn(); err != nil {
-			return IngestSummary{}, err
-		}
+	if err := publishConcurrently(publishers); err != nil {
+		return IngestSummary{}, err
 	}
 	lidarSummary, err := WriteLiDARPoints(cfg, bundles, rawAssetRows)
 	if err != nil {
@@ -208,8 +207,37 @@ type rowEventSpec[T any] struct {
 	fields func(T) eventFields
 }
 
+func publishConcurrently(publishers []func() error) error {
+	var wg sync.WaitGroup
+	errs := make(chan error, len(publishers))
+
+	for _, publishFn := range publishers {
+		fn := publishFn
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if err := fn(); err != nil {
+				errs <- err
+			}
+		}()
+	}
+
+	wg.Wait()
+	close(errs)
+
+	for err := range errs {
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func publishRows[T any](ctx context.Context, publisher events.Publisher, cfg config.Config, spec rowEventSpec[T], rows []T) error {
 	for _, row := range rows {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
 		fields := spec.fields(row)
 		if err := publish(ctx, publisher, spec.topic, fields.key, fields.eventType, cfg, fields.sceneID, fields.sampleID, fields.sensorChannel, fields.sourcePath, row); err != nil {
 			return err

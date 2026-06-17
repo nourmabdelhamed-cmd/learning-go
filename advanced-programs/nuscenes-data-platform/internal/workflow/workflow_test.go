@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/tannergabriel/learning-go/advanced-programs/nuscenes-data-platform/internal/config"
 	"github.com/tannergabriel/learning-go/advanced-programs/nuscenes-data-platform/internal/events"
@@ -145,6 +146,52 @@ func TestManifestBuildersRequireUpstreamArtifacts(t *testing.T) {
 	}
 	if _, err := BuildParquetManifest(cfg); err == nil || !strings.Contains(err.Error(), expected) {
 		t.Fatalf("BuildParquetManifest error = %v, want %q", err, expected)
+	}
+}
+
+func TestPublishConcurrentlyRunsPublishersInGoroutines(t *testing.T) {
+	started := make(chan struct{}, 2)
+	release := make(chan struct{})
+	publishers := []func() error{
+		func() error {
+			started <- struct{}{}
+			<-release
+			return nil
+		},
+		func() error {
+			started <- struct{}{}
+			<-release
+			return nil
+		},
+	}
+
+	done := make(chan error, 1)
+	go func() {
+		done <- publishConcurrently(publishers)
+	}()
+
+	released := false
+	defer func() {
+		if !released {
+			close(release)
+		}
+	}()
+	for i := 0; i < len(publishers); i++ {
+		select {
+		case <-started:
+		case <-time.After(time.Second):
+			t.Fatalf("publisher %d did not start concurrently", i)
+		}
+	}
+	close(release)
+	released = true
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("publishers did not finish")
 	}
 }
 

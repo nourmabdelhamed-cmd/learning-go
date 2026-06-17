@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 )
 
@@ -32,6 +33,7 @@ type Publisher interface {
 }
 
 type JSONLPublisher struct {
+	mu      sync.Mutex
 	path    string
 	file    *os.File
 	writer  *bufio.Writer
@@ -55,6 +57,9 @@ func NewJSONLPublisher(path string) (*JSONLPublisher, error) {
 }
 
 func (p *JSONLPublisher) Publish(_ context.Context, topic string, key string, event Envelope) error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
 	p.counter++
 	event.Topic = topic
 	event.Key = key
@@ -76,6 +81,9 @@ func (p *JSONLPublisher) Publish(_ context.Context, topic string, key string, ev
 }
 
 func (p *JSONLPublisher) Close() error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
 	if p.writer != nil {
 		if err := p.writer.Flush(); err != nil {
 			_ = p.file.Close()
@@ -89,6 +97,9 @@ func (p *JSONLPublisher) Close() error {
 }
 
 func (p *JSONLPublisher) Events() []Envelope {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
 	return append([]Envelope(nil), p.events...)
 }
 
