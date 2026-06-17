@@ -12,7 +12,7 @@ func TestReplaySamplesPublishesRawAndCEXNormalizedRows(t *testing.T) {
 	publisher := &broker.MemoryPublisher{}
 	result, err := ReplaySamples(
 		context.Background(),
-		filepath.Join("..", "..", "..", "predictor", "samples"),
+		filepath.Join("..", "..", "samples"),
 		publisher,
 	)
 	if err != nil {
