@@ -134,7 +134,7 @@ Comparison:
 
 ## 4. Events: Interface Boundary vs Kafka/Spark Output
 
-Claim: the event bus is deliberately Kafka-shaped, but local and deterministic first.
+Claim: the event bus is deliberately Kafka-shaped, but local and broker-free first.
 
 Go interface from `internal/events/events.go`:
 
@@ -162,6 +162,40 @@ return publishRows(ctx, publisher, cfg, rowEventSpec[nuscenes.SampleRow]{
 }, sampleRows)
 ```
 
+The row publishers are then started concurrently:
+
+```go
+if err := publishConcurrently(publishers); err != nil {
+	return IngestSummary{}, err
+}
+
+func publishConcurrently(publishers []func() error) error {
+	var wg sync.WaitGroup
+	errs := make(chan error, len(publishers))
+
+	for _, publishFn := range publishers {
+		fn := publishFn
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if err := fn(); err != nil {
+				errs <- err
+			}
+		}()
+	}
+
+	wg.Wait()
+	close(errs)
+
+	for err := range errs {
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+```
+
 Illustrative PySpark/Kafka equivalent:
 
 ```python
@@ -186,7 +220,8 @@ Comparison:
 
 - Go interface: easy to swap JSONL mock for Kafka/Redpanda producer later.
 - Spark writer: useful once events are already DataFrames at scale.
-- The repo starts with a deterministic JSONL publisher so CI can verify event shape without a broker.
+- The repo starts with a local JSONL publisher so CI can verify event shape without a broker.
+- Concurrent row publishers make the goroutine boundary visible; the JSONL publisher serializes its own counter, writer, and event slice with a mutex.
 
 ## 5. Byte-Verifiable Bronze Lake
 
@@ -417,7 +452,8 @@ Final comparison:
 The Go workflow was lightly refactored to make these teaching points easier to show:
 
 - `requireArtifacts(paths ...string)` centralizes upstream artifact checks while preserving error wording.
-- `eventFields`, `rowEventSpec[T]`, and `publishRows[T]` remove repeated event loops without hiding event topics or keys.
+- `eventFields`, `rowEventSpec[T]`, `publishRows[T]`, and `publishConcurrently` remove repeated event loops while making the goroutine boundary explicit.
+- `JSONLPublisher` guards its counter, buffered writer, and captured event slice with a mutex so concurrent publishers can share the local mock safely.
 - `parquetManifestSensorSpec` makes the seven required sensor projections explicit while keeping the denormalized `ParquetManifestRow` schema stable.
 
-The public behavior remains unchanged: existing Makefile commands, event topics, Parquet paths, manifest schemas, and Python loader contracts stay the same.
+The external contracts remain unchanged: existing Makefile commands, event topics, Parquet paths, manifest schemas, and Python loader contracts stay the same.

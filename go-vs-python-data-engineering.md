@@ -26,6 +26,16 @@ Python is usually stronger for:
 
 The practical rule is simple: use Python when the work is analytical and library-heavy; consider Go when the work is operational, concurrent, service-oriented, or needs a small deployable binary.
 
+## Companion Case Study
+
+This guide is intentionally small and language-focused. For a concrete repository-sized walkthrough, read:
+
+```text
+advanced-programs/nuscenes-data-platform/docs/go-vs-python-data-platform-demo.md
+```
+
+That case study shows the split in a real workflow: Go handles nuScenes ingestion, byte-level raw asset validation, event publishing, and Parquet contracts; Python handles DuckDB checks, PyTorch-compatible loaders, and training-facing ergonomics.
+
 ## Quick Comparison
 
 | Area | Go | Python |
