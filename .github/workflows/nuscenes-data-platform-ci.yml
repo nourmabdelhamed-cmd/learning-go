@@ -1,0 +1,33 @@
+name: nuScenes Data Platform CI
+
+on:
+  push:
+    paths:
+      - "advanced-programs/nuscenes-data-platform/**"
+      - ".github/workflows/nuscenes-data-platform-ci.yml"
+  pull_request:
+    paths:
+      - "advanced-programs/nuscenes-data-platform/**"
+      - ".github/workflows/nuscenes-data-platform-ci.yml"
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: advanced-programs/nuscenes-data-platform
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: go mod download
+      - run: uv sync --dev
+      - run: make test
+      - run: make ci-demo

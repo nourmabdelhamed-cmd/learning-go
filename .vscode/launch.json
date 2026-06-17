@@ -192,6 +192,120 @@
         ":8080"
       ],
       "console": "integratedTerminal"
+    },
+    {
+      "name": "nuScenes Lesson 01: Inspect Fixture",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/advanced-programs/nuscenes-data-platform/cmd/inspect-sample",
+      "cwd": "${workspaceFolder}/advanced-programs/nuscenes-data-platform",
+      "args": [
+        "-config",
+        "configs/nuscenes-mini.fixture.json"
+      ],
+      "env": {
+        "GOCACHE": "${workspaceFolder}/advanced-programs/nuscenes-data-platform/.gocache"
+      },
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "nuScenes Lesson 02-03: Ingest Fixture",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/advanced-programs/nuscenes-data-platform/cmd/ingest",
+      "cwd": "${workspaceFolder}/advanced-programs/nuscenes-data-platform",
+      "args": [
+        "-config",
+        "configs/nuscenes-mini.fixture.json"
+      ],
+      "env": {
+        "GOCACHE": "${workspaceFolder}/advanced-programs/nuscenes-data-platform/.gocache"
+      },
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "nuScenes Lesson 04: Query Fixture Lake",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/advanced-programs/nuscenes-data-platform/cmd/query-demo",
+      "cwd": "${workspaceFolder}/advanced-programs/nuscenes-data-platform",
+      "args": [
+        "-lake",
+        "runs/ci/lake"
+      ],
+      "env": {
+        "GOCACHE": "${workspaceFolder}/advanced-programs/nuscenes-data-platform/.gocache",
+        "PYTHONPATH": "python",
+        "UV_CACHE_DIR": "${workspaceFolder}/advanced-programs/nuscenes-data-platform/.uv-cache"
+      },
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "nuScenes Lesson 05: Build Manifest Fixture",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/advanced-programs/nuscenes-data-platform/cmd/build-manifest",
+      "cwd": "${workspaceFolder}/advanced-programs/nuscenes-data-platform",
+      "args": [
+        "-config",
+        "configs/nuscenes-mini.fixture.json"
+      ],
+      "env": {
+        "GOCACHE": "${workspaceFolder}/advanced-programs/nuscenes-data-platform/.gocache"
+      },
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "nuScenes Lesson 05: Build Parquet Manifest Fixture",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/advanced-programs/nuscenes-data-platform/cmd/build-parquet-manifest",
+      "cwd": "${workspaceFolder}/advanced-programs/nuscenes-data-platform",
+      "args": [
+        "-config",
+        "configs/nuscenes-mini.fixture.json"
+      ],
+      "env": {
+        "GOCACHE": "${workspaceFolder}/advanced-programs/nuscenes-data-platform/.gocache"
+      },
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "nuScenes Lesson 05: Train Loader Fixture",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "training_loader.demo",
+      "cwd": "${workspaceFolder}/advanced-programs/nuscenes-data-platform",
+      "python": "${workspaceFolder}/advanced-programs/nuscenes-data-platform/.venv/bin/python",
+      "args": [
+        "--manifest",
+        "runs/ci/manifests/training_manifest.jsonl"
+      ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/advanced-programs/nuscenes-data-platform/python"
+      },
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "nuScenes Lesson 05: Train Parquet Loader Fixture",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "training_loader.demo",
+      "cwd": "${workspaceFolder}/advanced-programs/nuscenes-data-platform",
+      "python": "${workspaceFolder}/advanced-programs/nuscenes-data-platform/.venv/bin/python",
+      "args": [
+        "--parquet-manifest",
+        "runs/ci/lake/training/training_manifest_v2.parquet"
+      ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/advanced-programs/nuscenes-data-platform/python"
+      },
+      "console": "integratedTerminal"
     }
   ]
 }

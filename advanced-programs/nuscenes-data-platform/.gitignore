@@ -1,0 +1,22 @@
+.DS_Store
+
+# Local real datasets and generated artifacts
+data/
+lake/
+manifests/
+runs/
+
+# Go/Python tooling
+.gocache/
+.venv/
+.uv-cache/
+.pytest_cache/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Local databases and logs
+*.db
+*.duckdb
+*.duckdb.wal
+*.log

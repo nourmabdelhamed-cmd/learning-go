@@ -36,3 +36,5 @@ advanced-programs/WebsocketsChat/.gocache/
 
 *.tgz
 *.zip
+wandb/
+mlruns/

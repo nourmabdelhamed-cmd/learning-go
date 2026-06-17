@@ -1,0 +1,9 @@
+[
+  {"token": "sensor-cam-front", "channel": "CAM_FRONT", "modality": "camera"},
+  {"token": "sensor-cam-front-left", "channel": "CAM_FRONT_LEFT", "modality": "camera"},
+  {"token": "sensor-cam-front-right", "channel": "CAM_FRONT_RIGHT", "modality": "camera"},
+  {"token": "sensor-cam-back", "channel": "CAM_BACK", "modality": "camera"},
+  {"token": "sensor-cam-back-left", "channel": "CAM_BACK_LEFT", "modality": "camera"},
+  {"token": "sensor-cam-back-right", "channel": "CAM_BACK_RIGHT", "modality": "camera"},
+  {"token": "sensor-lidar-top", "channel": "LIDAR_TOP", "modality": "lidar"}
+]

@@ -1,0 +1,9 @@
+[
+  {"token": "calib-cam-front", "sensor_token": "sensor-cam-front", "translation": [1, 0, 1], "rotation": [1, 0, 0, 0], "camera_intrinsic": [[1, 0, 0], [0, 1, 0], [0, 0, 1]]},
+  {"token": "calib-cam-front-left", "sensor_token": "sensor-cam-front-left", "translation": [1, 1, 1], "rotation": [1, 0, 0, 0], "camera_intrinsic": [[1, 0, 0], [0, 1, 0], [0, 0, 1]]},
+  {"token": "calib-cam-front-right", "sensor_token": "sensor-cam-front-right", "translation": [1, -1, 1], "rotation": [1, 0, 0, 0], "camera_intrinsic": [[1, 0, 0], [0, 1, 0], [0, 0, 1]]},
+  {"token": "calib-cam-back", "sensor_token": "sensor-cam-back", "translation": [-1, 0, 1], "rotation": [1, 0, 0, 0], "camera_intrinsic": [[1, 0, 0], [0, 1, 0], [0, 0, 1]]},
+  {"token": "calib-cam-back-left", "sensor_token": "sensor-cam-back-left", "translation": [-1, 1, 1], "rotation": [1, 0, 0, 0], "camera_intrinsic": [[1, 0, 0], [0, 1, 0], [0, 0, 1]]},
+  {"token": "calib-cam-back-right", "sensor_token": "sensor-cam-back-right", "translation": [-1, -1, 1], "rotation": [1, 0, 0, 0], "camera_intrinsic": [[1, 0, 0], [0, 1, 0], [0, 0, 1]]},
+  {"token": "calib-lidar-top", "sensor_token": "sensor-lidar-top", "translation": [0, 0, 2], "rotation": [1, 0, 0, 0], "camera_intrinsic": []}
+]

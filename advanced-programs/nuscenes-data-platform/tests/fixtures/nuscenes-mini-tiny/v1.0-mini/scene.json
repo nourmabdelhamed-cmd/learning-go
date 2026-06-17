@@ -1,0 +1,11 @@
+[
+  {
+    "token": "scene-token-1",
+    "log_token": "log-token-1",
+    "nbr_samples": 1,
+    "first_sample_token": "sample-token-1",
+    "last_sample_token": "sample-token-1",
+    "name": "scene-0061",
+    "description": "CI-only tiny nuScenes-like scene"
+  }
+]

@@ -1,0 +1,25 @@
+{
+    "go.lintOnSave": "package",
+    "go.lintTool": "golangci-lint-v2",
+    "go.lintFlags": [
+        "--path-mode=abs",
+        "--fast-only"
+    ],
+    "[go]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "golang.go",
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+        }
+    },
+    "duckdb.databases": [
+        {
+            "alias": "nuscenes",
+            "type": "file",
+            "path": "/Users/abdelhamednour/repos/learning-go.worktrees/data-engineering/advanced-programs/nuscenes-data-platform/nuscenes.duckdb",
+            "readOnly": true,
+            "attached": true
+        }
+    ],
+    "duckdb.defaultDatabase": "nuscenes",
+}
