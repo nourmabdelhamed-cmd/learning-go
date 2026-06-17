@@ -7,7 +7,7 @@ import (
 )
 
 func TestValidateSamplesReportsKnownFixtureShape(t *testing.T) {
-	report, err := Validate(filepath.Join("..", "..", "..", "predictor", "samples"))
+	report, err := Validate(filepath.Join("..", "..", "samples"))
 	if err != nil {
 		t.Fatalf("Validate returned error: %v", err)
 	}
