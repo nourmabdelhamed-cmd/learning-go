@@ -49,6 +49,27 @@ This module extends lessons from the main `learning-go` repository:
 - event/storage boundaries from `advanced-programs/predictor-go`
 - artifact boundaries and Python handoff from `vehicle-lifecycle`
 
+## Study Guide
+
+Before running `make demo`, review these Tour of Go topics. They map directly to the implementation:
+
+- Packages, imports, and exported names: the workflow is split across `config`, `nuscenes`, `events`, `rawassets`, `parquetwriter`, and `workflow`, while `cmd/*` packages stay thin runnable entrypoints.
+- Structs and struct tags: metadata, event, manifest, and Parquet rows are modeled as structs with `json` and `parquet` tags that define the external data contract.
+- Slices, maps, and `range`: the loader groups rows, builds token indexes, collects sensor files by sample, and emits ordered row slices.
+- Methods and pointer receivers: some methods mutate receiver state, such as building lookup indexes on a loaded dataset.
+- Interfaces: `events.Publisher` lets ingestion write to the current JSONL mock while preserving a boundary for a later Kafka or Redpanda producer.
+- Errors: most functions return `(value, error)` and fail fast when raw data, upstream artifacts, or byte checks are missing.
+- `defer`: file handles and writers are closed or flushed reliably during long-running ingestion and manifest generation.
+- Generics: typed helpers write and read Parquet rows without duplicating code for every row type.
+
+Also look up these data-platform concepts, which are not covered deeply by the Tour of Go:
+
+- Pipeline pattern: raw files become events, bronze Parquet, metadata/features, manifests, and Python training inputs.
+- Adapter/interface pattern: ingestion depends on a publisher interface instead of a concrete event system.
+- Data contract: schema versions, required artifacts, paths, sizes, and SHA-256 hashes make outputs verifiable.
+- Byte-for-byte bronze storage: raw camera, LiDAR, CAN, map, and metadata assets are inventoried and chunked before derived tables are built.
+- Deterministic artifact generation: sorted rows, stable hashes, and explicit stage dependencies make repeated runs easier to inspect.
+
 ## Required Local Archives
 
 Place these files at the repository root:

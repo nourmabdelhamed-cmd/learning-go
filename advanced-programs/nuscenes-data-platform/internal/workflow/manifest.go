@@ -15,17 +15,14 @@ import (
 )
 
 func BuildManifest(cfg config.Config) ([]ManifestRow, error) {
-	required := []string{
+	if err := requireArtifacts(
 		cfg.ParquetPath("metadata", "samples.parquet"),
 		cfg.ParquetPath("metadata", "sample_sensors.parquet"),
 		cfg.ParquetPath("metadata", "calibrations.parquet"),
 		cfg.ParquetPath("metadata", "ego_poses.parquet"),
 		cfg.ParquetPath("bronze", "raw_assets.parquet"),
-	}
-	for _, path := range required {
-		if _, err := os.Stat(path); err != nil {
-			return nil, fmt.Errorf("required upstream artifact missing: %s", path)
-		}
+	); err != nil {
+		return nil, err
 	}
 	samples, err := parquetwriter.Read[nuscenes.SampleRow](cfg.ParquetPath("metadata", "samples.parquet"))
 	if err != nil {

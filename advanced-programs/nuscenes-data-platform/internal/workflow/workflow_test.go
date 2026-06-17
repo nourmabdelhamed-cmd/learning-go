@@ -5,9 +5,11 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/tannergabriel/learning-go/advanced-programs/nuscenes-data-platform/internal/config"
+	"github.com/tannergabriel/learning-go/advanced-programs/nuscenes-data-platform/internal/events"
 	"github.com/tannergabriel/learning-go/advanced-programs/nuscenes-data-platform/internal/lidar"
 	"github.com/tannergabriel/learning-go/advanced-programs/nuscenes-data-platform/internal/parquetwriter"
 )
@@ -46,6 +48,17 @@ func TestIngestAndBuildManifest(t *testing.T) {
 	}
 	if summary.Samples != 1 || summary.SensorFiles != 7 || summary.LiDARPoints == 0 || summary.RawAssets == 0 || summary.RawAssetBytes == 0 {
 		t.Fatalf("unexpected summary: %#v", summary)
+	}
+	expectedEvents := summary.Scenes + summary.Samples + summary.SensorFiles + summary.CANRows + summary.MapRows + summary.RawAssets + summary.LiDARFiles
+	if summary.Events != expectedEvents {
+		t.Fatalf("events = %d, want %d from summary %#v", summary.Events, expectedEvents, summary)
+	}
+	eventRows, err := parquetwriter.Read[events.Envelope](cfg.ParquetPath("events", "events.parquet"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(eventRows) != summary.Events {
+		t.Fatalf("event parquet rows = %d, want %d", len(eventRows), summary.Events)
 	}
 	rows, err := BuildManifest(cfg)
 	if err != nil {
@@ -96,14 +109,42 @@ func TestIngestAndBuildManifest(t *testing.T) {
 	if lidarPoint.SourcePointCount < lidarPoint.DecodedPointCount || lidarPoint.DecodedPointCount != summary.LiDARPoints {
 		t.Fatalf("unexpected lidar point counts: point=%#v summary=%#v", lidarPoint, summary)
 	}
-	if len(row.LiDARBytes) == 0 || len(row.CamFrontBytes) == 0 {
-		t.Fatalf("parquet manifest missing sensor bytes")
+	manifestSensors := []struct {
+		name    string
+		payload []byte
+		sha     string
+		size    int64
+	}{
+		{"lidar", row.LiDARBytes, row.LiDARSHA256, row.LiDARSizeBytes},
+		{"cam_front", row.CamFrontBytes, row.CamFrontSHA256, row.CamFrontSizeBytes},
+		{"cam_front_left", row.CamFrontLeftBytes, row.CamFrontLeftSHA256, row.CamFrontLeftSizeBytes},
+		{"cam_front_right", row.CamFrontRightBytes, row.CamFrontRightSHA256, row.CamFrontRightSizeBytes},
+		{"cam_back", row.CamBackBytes, row.CamBackSHA256, row.CamBackSizeBytes},
+		{"cam_back_left", row.CamBackLeftBytes, row.CamBackLeftSHA256, row.CamBackLeftSizeBytes},
+		{"cam_back_right", row.CamBackRightBytes, row.CamBackRightSHA256, row.CamBackRightSizeBytes},
 	}
-	if got := digest(row.LiDARBytes); got != row.LiDARSHA256 {
-		t.Fatalf("lidar sha mismatch: got %s, want %s", got, row.LiDARSHA256)
+	for _, sensor := range manifestSensors {
+		if len(sensor.payload) == 0 {
+			t.Fatalf("parquet manifest missing %s bytes", sensor.name)
+		}
+		if int64(len(sensor.payload)) != sensor.size {
+			t.Fatalf("%s size = %d, want %d", sensor.name, len(sensor.payload), sensor.size)
+		}
+		if got := digest(sensor.payload); got != sensor.sha {
+			t.Fatalf("%s sha mismatch: got %s, want %s", sensor.name, got, sensor.sha)
+		}
 	}
-	if got := digest(row.CamFrontBytes); got != row.CamFrontSHA256 {
-		t.Fatalf("camera sha mismatch: got %s, want %s", got, row.CamFrontSHA256)
+}
+
+func TestManifestBuildersRequireUpstreamArtifacts(t *testing.T) {
+	cfg := fixtureConfig(t)
+	expected := "required upstream artifact missing: " + cfg.ParquetPath("metadata", "samples.parquet")
+
+	if _, err := BuildManifest(cfg); err == nil || !strings.Contains(err.Error(), expected) {
+		t.Fatalf("BuildManifest error = %v, want %q", err, expected)
+	}
+	if _, err := BuildParquetManifest(cfg); err == nil || !strings.Contains(err.Error(), expected) {
+		t.Fatalf("BuildParquetManifest error = %v, want %q", err, expected)
 	}
 }
 

@@ -2,7 +2,6 @@ package workflow
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"sort"
 
@@ -15,18 +14,15 @@ import (
 const ParquetManifestSchemaVersion = "manifest.v2"
 
 func BuildParquetManifest(cfg config.Config) (ParquetManifestSummary, error) {
-	required := []string{
+	if err := requireArtifacts(
 		cfg.ParquetPath("metadata", "samples.parquet"),
 		cfg.ParquetPath("metadata", "sample_sensors.parquet"),
 		cfg.ParquetPath("metadata", "calibrations.parquet"),
 		cfg.ParquetPath("metadata", "ego_poses.parquet"),
 		cfg.ParquetPath("bronze", "raw_assets.parquet"),
 		cfg.ParquetPath("bronze", "raw_asset_chunks"),
-	}
-	for _, path := range required {
-		if _, err := os.Stat(path); err != nil {
-			return ParquetManifestSummary{}, fmt.Errorf("required upstream artifact missing: %s", path)
-		}
+	); err != nil {
+		return ParquetManifestSummary{}, err
 	}
 
 	samples, err := parquetwriter.Read[nuscenes.SampleRow](cfg.ParquetPath("metadata", "samples.parquet"))
@@ -128,10 +124,10 @@ func collectParquetManifestAssets(samples []nuscenes.SampleRow, bySample map[str
 	required := map[string]rawassets.AssetRow{}
 	for _, sample := range samples {
 		sampleSensors := bySample[sample.SampleID]
-		for _, channel := range parquetManifestChannels() {
-			sensor, ok := sampleSensors[channel]
-			if !ok {
-				return nil, fmt.Errorf("sample %s missing %s in Parquet metadata", sample.SampleID, channel)
+		for _, spec := range parquetManifestSensorSpecs {
+			sensor, err := requireParquetManifestSensor(sample.SampleID, sampleSensors, spec)
+			if err != nil {
+				return nil, err
 			}
 			asset, err := assetForSensor(sample.SampleID, sensor, assetsByPath)
 			if err != nil {
@@ -144,9 +140,19 @@ func collectParquetManifestAssets(samples []nuscenes.SampleRow, bySample map[str
 }
 
 func parquetManifestChannels() []string {
-	channels := []string{"LIDAR_TOP"}
-	channels = append(channels, nuscenes.RequiredCameraChannels...)
+	channels := make([]string, 0, len(parquetManifestSensorSpecs))
+	for _, spec := range parquetManifestSensorSpecs {
+		channels = append(channels, spec.channel)
+	}
 	return channels
+}
+
+func requireParquetManifestSensor(sampleID string, sampleSensors map[string]nuscenes.SampleSensorRow, spec parquetManifestSensorSpec) (nuscenes.SampleSensorRow, error) {
+	sensor, ok := sampleSensors[spec.channel]
+	if !ok {
+		return nuscenes.SampleSensorRow{}, fmt.Errorf("sample %s missing %s in Parquet metadata", sampleID, spec.channel)
+	}
+	return sensor, nil
 }
 
 func assetForSensor(sampleID string, sensor nuscenes.SampleSensorRow, assetsByPath map[string]rawassets.AssetRow) (rawassets.AssetRow, error) {
@@ -166,15 +172,6 @@ func parquetManifestRow(
 	calibrationVersion string,
 	transformGraphVersion string,
 ) (ParquetManifestRow, error) {
-	lidar, ok := sampleSensors["LIDAR_TOP"]
-	if !ok {
-		return ParquetManifestRow{}, fmt.Errorf("sample %s missing LIDAR_TOP in Parquet metadata", sample.SampleID)
-	}
-	lidarAsset, err := assetForSensor(sample.SampleID, lidar, assetsByPath)
-	if err != nil {
-		return ParquetManifestRow{}, err
-	}
-
 	row := ParquetManifestRow{
 		SampleID:              sample.SampleID,
 		SceneID:               sample.SceneID,
@@ -183,105 +180,145 @@ func parquetManifestRow(
 		SchemaVersion:         ParquetManifestSchemaVersion,
 		CalibrationVersion:    calibrationVersion,
 		TransformGraphVersion: transformGraphVersion,
-		EgoPoseID:             lidar.EgoPoseID,
-		CalibrationID:         lidar.CalibrationID,
 	}
-	if err := setParquetManifestSensor(&row, "LIDAR_TOP", lidarAsset, assetBytes[lidarAsset.AssetID]); err != nil {
-		return ParquetManifestRow{}, err
-	}
-	for _, channel := range nuscenes.RequiredCameraChannels {
-		sensor, ok := sampleSensors[channel]
-		if !ok {
-			return ParquetManifestRow{}, fmt.Errorf("sample %s missing %s in Parquet metadata", sample.SampleID, channel)
-		}
-		asset, err := assetForSensor(sample.SampleID, sensor, assetsByPath)
-		if err != nil {
-			return ParquetManifestRow{}, err
-		}
-		if err := setParquetManifestSensor(&row, channel, asset, assetBytes[asset.AssetID]); err != nil {
+	for _, spec := range parquetManifestSensorSpecs {
+		if err := applyParquetManifestSensor(&row, sample.SampleID, sampleSensors, assetsByPath, assetBytes, spec); err != nil {
 			return ParquetManifestRow{}, err
 		}
 	}
 	return row, nil
 }
 
-func setParquetManifestSensor(row *ParquetManifestRow, channel string, asset rawassets.AssetRow, payload []byte) error {
+type parquetManifestSensorSpec struct {
+	channel string
+	set     func(row *ParquetManifestRow, asset rawassets.AssetRow, payload []byte)
+}
+
+var parquetManifestSensorSpecs = []parquetManifestSensorSpec{
+	{
+		channel: "LIDAR_TOP",
+		set: func(row *ParquetManifestRow, asset rawassets.AssetRow, payload []byte) {
+			row.LiDARAssetID = asset.AssetID
+			row.LiDARRelativePath = asset.RelativePath
+			row.LiDARPath = asset.Path
+			row.LiDARURI = asset.URI
+			row.LiDARSHA256 = asset.SHA256
+			row.LiDARSizeBytes = asset.SizeBytes
+			row.LiDARMediaType = asset.MediaType
+			row.LiDARChunkCount = asset.ChunkCount
+			row.LiDARBytes = payload
+		},
+	},
+	{
+		channel: "CAM_FRONT",
+		set: func(row *ParquetManifestRow, asset rawassets.AssetRow, payload []byte) {
+			row.CamFrontAssetID = asset.AssetID
+			row.CamFrontRelativePath = asset.RelativePath
+			row.CamFrontPath = asset.Path
+			row.CamFrontURI = asset.URI
+			row.CamFrontSHA256 = asset.SHA256
+			row.CamFrontSizeBytes = asset.SizeBytes
+			row.CamFrontMediaType = asset.MediaType
+			row.CamFrontChunkCount = asset.ChunkCount
+			row.CamFrontBytes = payload
+		},
+	},
+	{
+		channel: "CAM_FRONT_LEFT",
+		set: func(row *ParquetManifestRow, asset rawassets.AssetRow, payload []byte) {
+			row.CamFrontLeftAssetID = asset.AssetID
+			row.CamFrontLeftRelativePath = asset.RelativePath
+			row.CamFrontLeftPath = asset.Path
+			row.CamFrontLeftURI = asset.URI
+			row.CamFrontLeftSHA256 = asset.SHA256
+			row.CamFrontLeftSizeBytes = asset.SizeBytes
+			row.CamFrontLeftMediaType = asset.MediaType
+			row.CamFrontLeftChunkCount = asset.ChunkCount
+			row.CamFrontLeftBytes = payload
+		},
+	},
+	{
+		channel: "CAM_FRONT_RIGHT",
+		set: func(row *ParquetManifestRow, asset rawassets.AssetRow, payload []byte) {
+			row.CamFrontRightAssetID = asset.AssetID
+			row.CamFrontRightRelativePath = asset.RelativePath
+			row.CamFrontRightPath = asset.Path
+			row.CamFrontRightURI = asset.URI
+			row.CamFrontRightSHA256 = asset.SHA256
+			row.CamFrontRightSizeBytes = asset.SizeBytes
+			row.CamFrontRightMediaType = asset.MediaType
+			row.CamFrontRightChunkCount = asset.ChunkCount
+			row.CamFrontRightBytes = payload
+		},
+	},
+	{
+		channel: "CAM_BACK",
+		set: func(row *ParquetManifestRow, asset rawassets.AssetRow, payload []byte) {
+			row.CamBackAssetID = asset.AssetID
+			row.CamBackRelativePath = asset.RelativePath
+			row.CamBackPath = asset.Path
+			row.CamBackURI = asset.URI
+			row.CamBackSHA256 = asset.SHA256
+			row.CamBackSizeBytes = asset.SizeBytes
+			row.CamBackMediaType = asset.MediaType
+			row.CamBackChunkCount = asset.ChunkCount
+			row.CamBackBytes = payload
+		},
+	},
+	{
+		channel: "CAM_BACK_LEFT",
+		set: func(row *ParquetManifestRow, asset rawassets.AssetRow, payload []byte) {
+			row.CamBackLeftAssetID = asset.AssetID
+			row.CamBackLeftRelativePath = asset.RelativePath
+			row.CamBackLeftPath = asset.Path
+			row.CamBackLeftURI = asset.URI
+			row.CamBackLeftSHA256 = asset.SHA256
+			row.CamBackLeftSizeBytes = asset.SizeBytes
+			row.CamBackLeftMediaType = asset.MediaType
+			row.CamBackLeftChunkCount = asset.ChunkCount
+			row.CamBackLeftBytes = payload
+		},
+	},
+	{
+		channel: "CAM_BACK_RIGHT",
+		set: func(row *ParquetManifestRow, asset rawassets.AssetRow, payload []byte) {
+			row.CamBackRightAssetID = asset.AssetID
+			row.CamBackRightRelativePath = asset.RelativePath
+			row.CamBackRightPath = asset.Path
+			row.CamBackRightURI = asset.URI
+			row.CamBackRightSHA256 = asset.SHA256
+			row.CamBackRightSizeBytes = asset.SizeBytes
+			row.CamBackRightMediaType = asset.MediaType
+			row.CamBackRightChunkCount = asset.ChunkCount
+			row.CamBackRightBytes = payload
+		},
+	},
+}
+
+func applyParquetManifestSensor(
+	row *ParquetManifestRow,
+	sampleID string,
+	sampleSensors map[string]nuscenes.SampleSensorRow,
+	assetsByPath map[string]rawassets.AssetRow,
+	assetBytes map[string][]byte,
+	spec parquetManifestSensorSpec,
+) error {
+	sensor, err := requireParquetManifestSensor(sampleID, sampleSensors, spec)
+	if err != nil {
+		return err
+	}
+	asset, err := assetForSensor(sampleID, sensor, assetsByPath)
+	if err != nil {
+		return err
+	}
+	payload := assetBytes[asset.AssetID]
 	if err := rawassets.VerifyAssetBytes(asset, payload); err != nil {
 		return err
 	}
-	switch channel {
-	case "LIDAR_TOP":
-		row.LiDARAssetID = asset.AssetID
-		row.LiDARRelativePath = asset.RelativePath
-		row.LiDARPath = asset.Path
-		row.LiDARURI = asset.URI
-		row.LiDARSHA256 = asset.SHA256
-		row.LiDARSizeBytes = asset.SizeBytes
-		row.LiDARMediaType = asset.MediaType
-		row.LiDARChunkCount = asset.ChunkCount
-		row.LiDARBytes = payload
-	case "CAM_FRONT":
-		row.CamFrontAssetID = asset.AssetID
-		row.CamFrontRelativePath = asset.RelativePath
-		row.CamFrontPath = asset.Path
-		row.CamFrontURI = asset.URI
-		row.CamFrontSHA256 = asset.SHA256
-		row.CamFrontSizeBytes = asset.SizeBytes
-		row.CamFrontMediaType = asset.MediaType
-		row.CamFrontChunkCount = asset.ChunkCount
-		row.CamFrontBytes = payload
-	case "CAM_FRONT_LEFT":
-		row.CamFrontLeftAssetID = asset.AssetID
-		row.CamFrontLeftRelativePath = asset.RelativePath
-		row.CamFrontLeftPath = asset.Path
-		row.CamFrontLeftURI = asset.URI
-		row.CamFrontLeftSHA256 = asset.SHA256
-		row.CamFrontLeftSizeBytes = asset.SizeBytes
-		row.CamFrontLeftMediaType = asset.MediaType
-		row.CamFrontLeftChunkCount = asset.ChunkCount
-		row.CamFrontLeftBytes = payload
-	case "CAM_FRONT_RIGHT":
-		row.CamFrontRightAssetID = asset.AssetID
-		row.CamFrontRightRelativePath = asset.RelativePath
-		row.CamFrontRightPath = asset.Path
-		row.CamFrontRightURI = asset.URI
-		row.CamFrontRightSHA256 = asset.SHA256
-		row.CamFrontRightSizeBytes = asset.SizeBytes
-		row.CamFrontRightMediaType = asset.MediaType
-		row.CamFrontRightChunkCount = asset.ChunkCount
-		row.CamFrontRightBytes = payload
-	case "CAM_BACK":
-		row.CamBackAssetID = asset.AssetID
-		row.CamBackRelativePath = asset.RelativePath
-		row.CamBackPath = asset.Path
-		row.CamBackURI = asset.URI
-		row.CamBackSHA256 = asset.SHA256
-		row.CamBackSizeBytes = asset.SizeBytes
-		row.CamBackMediaType = asset.MediaType
-		row.CamBackChunkCount = asset.ChunkCount
-		row.CamBackBytes = payload
-	case "CAM_BACK_LEFT":
-		row.CamBackLeftAssetID = asset.AssetID
-		row.CamBackLeftRelativePath = asset.RelativePath
-		row.CamBackLeftPath = asset.Path
-		row.CamBackLeftURI = asset.URI
-		row.CamBackLeftSHA256 = asset.SHA256
-		row.CamBackLeftSizeBytes = asset.SizeBytes
-		row.CamBackLeftMediaType = asset.MediaType
-		row.CamBackLeftChunkCount = asset.ChunkCount
-		row.CamBackLeftBytes = payload
-	case "CAM_BACK_RIGHT":
-		row.CamBackRightAssetID = asset.AssetID
-		row.CamBackRightRelativePath = asset.RelativePath
-		row.CamBackRightPath = asset.Path
-		row.CamBackRightURI = asset.URI
-		row.CamBackRightSHA256 = asset.SHA256
-		row.CamBackRightSizeBytes = asset.SizeBytes
-		row.CamBackRightMediaType = asset.MediaType
-		row.CamBackRightChunkCount = asset.ChunkCount
-		row.CamBackRightBytes = payload
-	default:
-		return fmt.Errorf("unsupported parquet manifest channel: %s", channel)
+	if spec.channel == "LIDAR_TOP" {
+		row.EgoPoseID = sensor.EgoPoseID
+		row.CalibrationID = sensor.CalibrationID
 	}
+	spec.set(row, asset, payload)
 	return nil
 }

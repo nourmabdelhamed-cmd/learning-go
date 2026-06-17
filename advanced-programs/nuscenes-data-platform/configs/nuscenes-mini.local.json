@@ -1,6 +1,6 @@
 {
   "dataset_version": "v1.0-mini",
-  "schema_version": "manifest.v1",
+  "schema_version": "manifest.v2",
   "raw_root": "data/raw/nuscenes",
   "raw_asset_roots": ["data/raw"],
   "metadata_dir": "data/raw/nuscenes/v1.0-mini",

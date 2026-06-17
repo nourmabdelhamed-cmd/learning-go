@@ -61,33 +61,91 @@ func Ingest(ctx context.Context, cfg config.Config) (IngestSummary, error) {
 		return IngestSummary{}, err
 	}
 
-	for _, row := range sceneRows {
-		if err := publish(ctx, publisher, "nuscenes.scene.v1", row.SceneID, "scene", cfg, row.SceneID, "", "", "", row); err != nil {
-			return IngestSummary{}, err
-		}
+	publishers := []func() error{
+		func() error {
+			return publishRows(ctx, publisher, cfg,
+				rowEventSpec[nuscenes.SceneRow]{
+					topic: "nuscenes.scene.v1",
+					fields: func(row nuscenes.SceneRow) eventFields {
+						return eventFields{
+							key:       row.SceneID,
+							eventType: "scene",
+							sceneID:   row.SceneID,
+						}
+					},
+				}, sceneRows)
+		},
+		func() error {
+			return publishRows(ctx, publisher, cfg,
+				rowEventSpec[nuscenes.SampleRow]{
+					topic: "nuscenes.sample.v1",
+					fields: func(row nuscenes.SampleRow) eventFields {
+						return eventFields{
+							key:       row.SampleID,
+							eventType: "sample",
+							sceneID:   row.SceneID,
+							sampleID:  row.SampleID,
+						}
+					},
+				}, sampleRows)
+		},
+		func() error {
+			return publishRows(ctx, publisher, cfg,
+				rowEventSpec[nuscenes.SampleSensorRow]{
+					topic: "nuscenes.sensor_file.v1",
+					fields: func(row nuscenes.SampleSensorRow) eventFields {
+						return eventFields{
+							key:           row.SampleID + ":" + row.SensorChannel,
+							eventType:     "sensor_file",
+							sceneID:       row.SceneID,
+							sampleID:      row.SampleID,
+							sensorChannel: row.SensorChannel,
+							sourcePath:    row.Path,
+						}
+					},
+				}, sensorRows)
+		},
+		func() error {
+			return publishRows(ctx, publisher, cfg,
+				rowEventSpec[nuscenes.CANBusRow]{
+					topic: "nuscenes.can_bus.v1",
+					fields: func(row nuscenes.CANBusRow) eventFields {
+						return eventFields{
+							key:       row.SampleID,
+							eventType: "can_bus",
+							sceneID:   row.SceneID,
+							sampleID:  row.SampleID,
+						}
+					},
+				}, canRows)
+		},
+		func() error {
+			return publishRows(ctx, publisher, cfg, rowEventSpec[nuscenes.MapRow]{
+				topic: "nuscenes.map.v1",
+				fields: func(row nuscenes.MapRow) eventFields {
+					return eventFields{
+						key:        row.MapID,
+						eventType:  "map",
+						sourcePath: row.Path,
+					}
+				},
+			}, mapRows)
+		},
+		func() error {
+			return publishRows(ctx, publisher, cfg, rowEventSpec[rawassets.AssetRow]{
+				topic: "nuscenes.raw_asset.v1",
+				fields: func(row rawassets.AssetRow) eventFields {
+					return eventFields{
+						key:        row.AssetID,
+						eventType:  "raw_asset",
+						sourcePath: row.Path,
+					}
+				},
+			}, rawAssetRows)
+		},
 	}
-	for _, row := range sampleRows {
-		if err := publish(ctx, publisher, "nuscenes.sample.v1", row.SampleID, "sample", cfg, row.SceneID, row.SampleID, "", "", row); err != nil {
-			return IngestSummary{}, err
-		}
-	}
-	for _, row := range sensorRows {
-		if err := publish(ctx, publisher, "nuscenes.sensor_file.v1", row.SampleID+":"+row.SensorChannel, "sensor_file", cfg, row.SceneID, row.SampleID, row.SensorChannel, row.Path, row); err != nil {
-			return IngestSummary{}, err
-		}
-	}
-	for _, row := range canRows {
-		if err := publish(ctx, publisher, "nuscenes.can_bus.v1", row.SampleID, "can_bus", cfg, row.SceneID, row.SampleID, "", "", row); err != nil {
-			return IngestSummary{}, err
-		}
-	}
-	for _, row := range mapRows {
-		if err := publish(ctx, publisher, "nuscenes.map.v1", row.MapID, "map", cfg, "", "", "", row.Path, row); err != nil {
-			return IngestSummary{}, err
-		}
-	}
-	for _, row := range rawAssetRows {
-		if err := publish(ctx, publisher, "nuscenes.raw_asset.v1", row.AssetID, "raw_asset", cfg, "", "", "", row.Path, row); err != nil {
+	for _, publishFn := range publishers {
+		if err := publishFn(); err != nil {
 			return IngestSummary{}, err
 		}
 	}
@@ -134,6 +192,30 @@ func Ingest(ctx context.Context, cfg config.Config) (IngestSummary, error) {
 		RawAssetBytes:   rawAssetSummary.Bytes,
 		Events:          len(publisher.Events()),
 	}, nil
+}
+
+type eventFields struct {
+	key           string
+	eventType     string
+	sceneID       string
+	sampleID      string
+	sensorChannel string
+	sourcePath    string
+}
+
+type rowEventSpec[T any] struct {
+	topic  string
+	fields func(T) eventFields
+}
+
+func publishRows[T any](ctx context.Context, publisher events.Publisher, cfg config.Config, spec rowEventSpec[T], rows []T) error {
+	for _, row := range rows {
+		fields := spec.fields(row)
+		if err := publish(ctx, publisher, spec.topic, fields.key, fields.eventType, cfg, fields.sceneID, fields.sampleID, fields.sensorChannel, fields.sourcePath, row); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func publish(ctx context.Context, publisher events.Publisher, topic string, key string, eventType string, cfg config.Config, sceneID string, sampleID string, sensorChannel string, sourcePath string, payloadValue any) error {
