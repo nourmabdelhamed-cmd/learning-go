@@ -1,0 +1,26 @@
+{
+  "version": "btc-sample-v1",
+  "source": "advanced-programs/predictor/samples/BTC_normalized_sample_all_exchanges_all_instruments.json",
+  "instruments": [
+    {"exchange":"Binance","instrument_type":"future","product_type":"linear","symbol":"BTCUSDT","base":"BTC","quote":"USDT","underlying":"","instrument_id":"BTCUSDT","venue_symbol":"BTCUSDT","endpoint":"binance-usdm-depth20","depth":20,"enabled":true},
+    {"exchange":"Binance","instrument_type":"option","product_type":"clob","symbol":"BTC-260626-70000-P","base":"BTC","quote":"USDT","underlying":"BTCUSDT","instrument_id":"BTC-260626-70000-P","venue_symbol":"BTC-260626-70000-P","endpoint":"binance-option-depth20","depth":20,"enabled":true},
+    {"exchange":"Binance","instrument_type":"perp","product_type":"linear","symbol":"BTCUSDT","base":"BTC","quote":"USDT","underlying":"","instrument_id":"BTCUSDT","venue_symbol":"BTCUSDT","endpoint":"binance-usdm-depth20","depth":20,"enabled":true},
+    {"exchange":"Binance","instrument_type":"spot","product_type":"clob","symbol":"BTCUSDT","base":"BTC","quote":"USDT","underlying":"","instrument_id":"BTCUSDT","venue_symbol":"BTCUSDT","endpoint":"binance-spot-depth20","depth":20,"enabled":true},
+    {"exchange":"Bitget","instrument_type":"future","product_type":"linear","symbol":"BTCUSDT","base":"BTC","quote":"USDT","underlying":"","instrument_id":"BTCUSDT","venue_symbol":"BTCUSDT","endpoint":"bitget-usdt-futures-books15","depth":15,"enabled":true},
+    {"exchange":"Bitget","instrument_type":"perp","product_type":"linear","symbol":"BTCUSDT","base":"BTC","quote":"USDT","underlying":"","instrument_id":"BTCUSDT","venue_symbol":"BTCUSDT","endpoint":"bitget-usdt-futures-books15","depth":15,"enabled":true},
+    {"exchange":"Bitget","instrument_type":"spot","product_type":"clob","symbol":"BTCUSDT","base":"BTC","quote":"USDT","underlying":"","instrument_id":"BTCUSDT","venue_symbol":"BTCUSDT","endpoint":"bitget-spot-books15","depth":15,"enabled":true},
+    {"exchange":"Bybit","instrument_type":"future","product_type":"linear","symbol":"BTCUSDT","base":"BTC","quote":"USDT","underlying":"","instrument_id":"BTCUSDT","venue_symbol":"BTCUSDT","endpoint":"bybit-linear-orderbook50","depth":50,"enabled":true},
+    {"exchange":"Bybit","instrument_type":"option","product_type":"clob","symbol":"BTC-17MAY26-76000-P-USDT","base":"BTC","quote":"USDT","underlying":"BTCUSDT","instrument_id":"BTC-17MAY26-76000-P-USDT","venue_symbol":"BTC-17MAY26-76000-P-USDT","endpoint":"bybit-option-orderbook25","depth":25,"enabled":true},
+    {"exchange":"Bybit","instrument_type":"perp","product_type":"linear","symbol":"BTCUSDT","base":"BTC","quote":"USDT","underlying":"","instrument_id":"BTCUSDT","venue_symbol":"BTCUSDT","endpoint":"bybit-linear-orderbook50","depth":50,"enabled":true},
+    {"exchange":"Bybit","instrument_type":"spot","product_type":"clob","symbol":"BTCUSDT","base":"BTC","quote":"USDT","underlying":"","instrument_id":"BTCUSDT","venue_symbol":"BTCUSDT","endpoint":"bybit-spot-orderbook50","depth":50,"enabled":true},
+    {"exchange":"Gateio","instrument_type":"spot","product_type":"clob","symbol":"BTCUSDT","base":"BTC","quote":"USDT","underlying":"","instrument_id":"BTCUSDT","venue_symbol":"BTC_USDT","endpoint":"gateio-spot-order-book-update","depth":50,"enabled":true},
+    {"exchange":"Kucoin","instrument_type":"spot","product_type":"clob","symbol":"BTCUSDT","base":"BTC","quote":"USDT","underlying":"","instrument_id":"BTCUSDT","venue_symbol":"BTC-USDT","endpoint":"kucoin-spot-level2Depth50","depth":50,"enabled":true},
+    {"exchange":"MEXC","instrument_type":"future","product_type":"linear","symbol":"BTC_USDT","base":"BTC","quote":"USDT","underlying":"","instrument_id":"BTC_USDT","venue_symbol":"BTC_USDT","endpoint":"mexc-futures-depth","depth":20,"enabled":true},
+    {"exchange":"MEXC","instrument_type":"perp","product_type":"linear","symbol":"BTC_USDT","base":"BTC","quote":"USDT","underlying":"","instrument_id":"BTC_USDT","venue_symbol":"BTC_USDT","endpoint":"mexc-futures-depth","depth":20,"enabled":true},
+    {"exchange":"MEXC","instrument_type":"spot","product_type":"clob","symbol":"BTCUSDT","base":"BTC","quote":"USDT","underlying":"","instrument_id":"BTCUSDT","venue_symbol":"BTCUSDT","endpoint":"mexc-spot-depth20","depth":20,"enabled":true},
+    {"exchange":"OKX","instrument_type":"future","product_type":"linear","symbol":"BTC-USDT-260626","base":"BTC","quote":"USDT","underlying":"","instrument_id":"BTC-USDT-260626","venue_symbol":"BTC-USDT-260626","endpoint":"okx-books5","depth":5,"enabled":true},
+    {"exchange":"OKX","instrument_type":"option","product_type":"clob","symbol":"BTC-USD-260517-78750-C","base":"BTC","quote":"USD","underlying":"BTCUSD","instrument_id":"BTC-USD-260517-78750-C","venue_symbol":"BTC-USD-260517-78750-C","endpoint":"okx-books5","depth":5,"enabled":true},
+    {"exchange":"OKX","instrument_type":"perp","product_type":"linear","symbol":"BTC-USDT-SWAP","base":"BTC","quote":"USDT","underlying":"","instrument_id":"BTC-USDT-SWAP","venue_symbol":"BTC-USDT-SWAP","endpoint":"okx-books5","depth":5,"enabled":true},
+    {"exchange":"OKX","instrument_type":"spot","product_type":"clob","symbol":"BTCUSDT","base":"BTC","quote":"USDT","underlying":"","instrument_id":"BTCUSDT","venue_symbol":"BTC-USDT","endpoint":"okx-books5","depth":5,"enabled":true}
+  ]
+}

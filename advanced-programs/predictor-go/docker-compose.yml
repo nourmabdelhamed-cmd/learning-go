@@ -1,0 +1,95 @@
+services:
+  redis:
+    image: redis:7-alpine
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --appendfsync
+      - everysec
+    ports:
+      - "127.0.0.1:6380:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    environment:
+      CLICKHOUSE_DB: orderbooks
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-clickhouse}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    ports:
+      - "127.0.0.1:8124:8123"
+      - "127.0.0.1:9001:9000"
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+    healthcheck:
+      test: ["CMD-SHELL", "clickhouse-client --query 'SELECT 1' >/dev/null"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  instrument-orchestrator:
+    build: .
+    entrypoint: ["/app/instrument-orchestrator"]
+    command:
+      - -config=/app/configs/btc-instruments.sample.json
+      - -redis-url=redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_started
+    restart: "no"
+
+  sample-replay:
+    build: .
+    entrypoint: ["/app/predictorctl"]
+    command:
+      - replay-samples
+      - -samples-dir=/samples
+      - -sink=redis
+      - -redis-url=redis://redis:6379/0
+    volumes:
+      - ../predictor/samples:/samples:ro
+    depends_on:
+      redis:
+        condition: service_started
+      instrument-orchestrator:
+        condition: service_completed_successfully
+    restart: "no"
+
+  predictor-writer:
+    build: .
+    entrypoint: ["/app/predictor-writer"]
+    command:
+      - -redis-url=redis://redis:6379/0
+      - -sink=${PREDICTOR_SINK:-parquet}
+      - -parquet-dir=/data/orderbooks
+      - -clickhouse-addr=clickhouse:9000
+      - -clickhouse-password=${CLICKHOUSE_PASSWORD:-clickhouse}
+      - -metrics-addr=:8080
+    ports:
+      - "127.0.0.1:8088:8080"
+    volumes:
+      - output-data:/data
+    depends_on:
+      redis:
+        condition: service_started
+      clickhouse:
+        condition: service_healthy
+    restart: unless-stopped
+
+  unit-tests:
+    build: .
+    entrypoint: ["go"]
+    command: ["test", "./..."]
+    profiles:
+      - test
+    restart: "no"
+
+volumes:
+  redis-data:
+  clickhouse-data:
+  output-data:

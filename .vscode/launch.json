@@ -2,13 +2,23 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Launch file",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${file}"
+    },
+    {
       "name": "WebSocketsChat: Phase 1 Server",
       "type": "go",
       "request": "launch",
       "mode": "debug",
       "program": "${workspaceFolder}/advanced-programs/WebsocketsChat/phase1",
       "cwd": "${workspaceFolder}/advanced-programs/WebsocketsChat",
-      "args": ["-addr", ":8080"],
+      "args": [
+        "-addr",
+        ":8080"
+      ],
       "env": {
         "GOCACHE": "${workspaceFolder}/advanced-programs/WebsocketsChat/.gocache"
       },
@@ -21,7 +31,11 @@
       "mode": "debug",
       "program": "${workspaceFolder}/advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/cmd/vehicle-lifecycle",
       "cwd": "${workspaceFolder}/advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle",
-      "args": ["all", "-rows", "500"],
+      "args": [
+        "all",
+        "-rows",
+        "500"
+      ],
       "env": {
         "GOCACHE": "${workspaceFolder}/advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/.gocache",
         "UV_CACHE_DIR": "${workspaceFolder}/advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/.uv-cache"
@@ -35,7 +49,13 @@
       "mode": "debug",
       "program": "${workspaceFolder}/advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/cmd/vehicle-lifecycle",
       "cwd": "${workspaceFolder}/advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle",
-      "args": ["orchestrate", "-config", "configs/pipeline.json", "-rows", "500"],
+      "args": [
+        "orchestrate",
+        "-config",
+        "configs/pipeline.json",
+        "-rows",
+        "500"
+      ],
       "env": {
         "GOCACHE": "${workspaceFolder}/advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/.gocache",
         "UV_CACHE_DIR": "${workspaceFolder}/advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/.uv-cache"
@@ -49,7 +69,11 @@
       "mode": "debug",
       "program": "${workspaceFolder}/advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/cmd/vehicle-lifecycle",
       "cwd": "${workspaceFolder}/advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle",
-      "args": ["orchestrate", "-config", "configs/perception-dvc.json"],
+      "args": [
+        "orchestrate",
+        "-config",
+        "configs/perception-dvc.json"
+      ],
       "env": {
         "GOCACHE": "${workspaceFolder}/advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/.gocache",
         "UV_CACHE_DIR": "${workspaceFolder}/advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/.uv-cache",
@@ -64,7 +88,11 @@
       "mode": "debug",
       "program": "${workspaceFolder}/advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/cmd/vehicle-lifecycle",
       "cwd": "${workspaceFolder}/advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle",
-      "args": ["orchestrate", "-config", "configs/perception-training.json"],
+      "args": [
+        "orchestrate",
+        "-config",
+        "configs/perception-training.json"
+      ],
       "env": {
         "GOCACHE": "${workspaceFolder}/advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/.gocache",
         "UV_CACHE_DIR": "${workspaceFolder}/advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/.uv-cache",
@@ -79,12 +107,90 @@
       "mode": "debug",
       "program": "${workspaceFolder}/advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/cmd/vehicle-lifecycle",
       "cwd": "${workspaceFolder}/advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle",
-      "args": ["orchestrate", "-config", "configs/perception-training-full-wandb.json"],
+      "args": [
+        "orchestrate",
+        "-config",
+        "configs/perception-training-full-wandb.json"
+      ],
       "env": {
         "GOCACHE": "${workspaceFolder}/advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/.gocache",
         "UV_CACHE_DIR": "${workspaceFolder}/advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/.uv-cache",
         "DVC_SITE_CACHE_DIR": "${workspaceFolder}/advanced-programs/GrafanaSensorVisualization/vehicle-lifecycle/.dvc/site-cache"
       },
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Predictor Go: Validate Samples",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/advanced-programs/predictor-go/cmd/predictorctl",
+      "cwd": "${workspaceFolder}/advanced-programs/predictor-go",
+      "args": [
+        "validate-samples"
+      ],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Predictor Go: Replay Samples Stdout",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/advanced-programs/predictor-go/cmd/predictorctl",
+      "cwd": "${workspaceFolder}/advanced-programs/predictor-go",
+      "args": [
+        "replay-samples",
+        "-sink",
+        "stdout"
+      ],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Predictor Go: Replay Samples Redis",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/advanced-programs/predictor-go/cmd/predictorctl",
+      "cwd": "${workspaceFolder}/advanced-programs/predictor-go",
+      "args": [
+        "replay-samples",
+        "-sink",
+        "redis",
+        "-redis-url",
+        "redis://localhost:6379/0"
+      ],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Predictor Go: Instrument Orchestrator",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/advanced-programs/predictor-go/cmd/instrument-orchestrator",
+      "cwd": "${workspaceFolder}/advanced-programs/predictor-go",
+      "args": [
+        "-config",
+        "configs/btc-instruments.sample.json"
+      ],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Predictor Go: Writer Redis to Parquet",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/advanced-programs/predictor-go/cmd/predictor-writer",
+      "cwd": "${workspaceFolder}/advanced-programs/predictor-go",
+      "args": [
+        "-redis-url",
+        "redis://localhost:6379/0",
+        "-sink",
+        "parquet",
+        "-parquet-dir",
+        "output/orderbooks",
+        "-metrics-addr",
+        ":8080"
+      ],
       "console": "integratedTerminal"
     }
   ]

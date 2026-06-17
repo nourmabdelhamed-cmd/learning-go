@@ -1,0 +1,7 @@
+bin/
+output/
+data/
+runs/
+*.log
+.env
+.DS_Store
